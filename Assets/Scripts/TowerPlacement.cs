@@ -17,6 +17,9 @@ public class TowerPlacement : MonoBehaviour
     private Camera mainCam;
     private int previewLayer;
 
+    // Public property so other scripts can check if we're in placement mode
+    public bool IsInPlacementMode => selectedTroop != null;
+
     private void Start()
     {
         mainCam = Camera.main;
@@ -238,9 +241,19 @@ public class TowerPlacement : MonoBehaviour
 
         gameManager.SpendCash(selectedTroop.cost);
 
-        GameObject troop = Instantiate(selectedTroop.prefab, placementPosition, Quaternion.identity);
+        // Store the troop data before deselecting
+        TroopData troopToPlace = selectedTroop;
 
-        // Deselect troop after placing
+        // Deselect troop BEFORE placing to prevent auto-selection
         DeselectTroop();
+
+        GameObject troop = Instantiate(troopToPlace.prefab, placementPosition, Quaternion.identity);
+
+        // Initialize upgrade controller with troop data
+        TroopUpgradeController upgradeController = troop.GetComponent<TroopUpgradeController>();
+        if (upgradeController != null)
+        {
+            upgradeController.Initialize(troopToPlace);
+        }
     }
 }
